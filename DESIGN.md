@@ -33,6 +33,7 @@ References: [Material Web button hierarchy](https://github.com/material-componen
 - Desktop code height: `clamp(320px, 100svh - 420px, 560px)` so the diagnostic summary remains close to the first viewport.
 - Compose editor and selected Quadlet output have equal prominence. Output tabs use literal filenames and scroll horizontally within their own area.
 - Diagnostics sit directly below the workspace. Counts remain visible; the list scrolls within a 240px maximum height. Each entry has a textual severity label, a technical path and an explanation. Never hide errors.
+- Repeated logging errors may share a compact native details/summary row showing total errors and affected services. Expansion preserves every original path/message; grouping never changes core diagnostics, counts or export eligibility. Localize both EN/JP summaries and keep keyboard disclosure/focus accessible. Do not use large cards.
 - Footer: one privacy note, plus a concise live status. No promotional or repeated explanatory copy.
 
 ## Typography

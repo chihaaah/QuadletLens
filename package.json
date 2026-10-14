@@ -13,6 +13,7 @@
   "scripts": {
     "dev": "npm run dev --workspace @compose2quadlet/web",
     "test": "vitest run",
+    "test:quadlet": "npm run build --workspace @compose2quadlet/core && node --test tests/integration/quadlet.integration.mjs",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit -p packages/core && tsc --noEmit -p apps/web",
     "build": "npm run typecheck && npm run build --workspace @compose2quadlet/core && npm run build --workspace @compose2quadlet/web"

@@ -126,9 +126,23 @@ The generator applies `[Install]`/`WantedBy=default.target`; do not use `systemc
 - After merging, select **Settings → Pages → Build and deployment → Source: GitHub Actions**. Set custom domain `quadlet.chiha.dev`, configure required DNS externally, and enable HTTPS when available. Repository work does not change DNS/Pages account settings.
 - For a project-site URL without the custom domain, set Vite `base` to `/compose2quadlet/` before building. Current root base is intentional.
 
+## Runtime validation
+
+`npm test` stays fast and does not require Podman. `npm run test:quadlet` is a separate Linux-only integration command; it builds core and runs Node tests against installed Podman/systemd packages. Missing packages/generator paths fail with an actionable error. Generator discovery reads installed RPM or Debian Podman package manifests; `QUADLET_GENERATOR` may point to a custom installed generator.
+
+CI creates a Fedora 44 userspace from signed Fedora RPM packages on the Ubuntu runner, pinning Podman `5.8.7-1.fc44`. It uses neither an OCI environment image nor privileged containers, boots no systemd, starts/pulls no workload, and requires network only for dependency/package installation. The actual `podman --version`, `systemd --version`, generator path and emitted units are logged for each run.
+
+The [successful validation run](https://github.com/chihaaah/compose2quadlet/actions/runs/38580706207) tested **Podman 5.8.7** and **systemd 259 (259.9-1.fc44)**. The installed package manifest resolved the generator to `/usr/lib/systemd/system-generators/podman-system-generator`. All four integration tests passed: nginx generated 2 services, stack generated 4, Harbor's test-only logging-stripped copy generated 12, and an invalid Quadlet was rejected. The chroot mounts read-only `/proc` for the installed tools; it does not run a service manager.
+
+Each nginx/stack/Harbor test writes Quadlets to a fresh temporary directory and runs `QUADLET_UNIT_DIRS=<dir> <detected-generator> --user --dryrun`. It checks the emitted service set, then invokes the generator in ordinary output mode into another temporary directory to verify actual `.service` files and focused Podman arguments/dependencies. Nothing invokes those service commands. Exit failures, missing/partial unit output, and an intentionally invalid Quadlet are tested. Generated services/logs are saved as the CI artifact `quadlet-fedora44-output`.
+
+Harbor validation removes logging only from an in-memory **test-only** copy: 11 container units plus one network unit. The original fixture stays unchanged and normal conversion still fails on all 20 syslog driver/options errors. Browser diagnostic grouping is presentation-only: an expandable Logging summary exposes every original path in EN/JP, and exports remain blocked.
+
+This validates generator syntax and emitted arguments for the configured Fedora/Podman environment, not Harbor deployability, image availability, application readiness, syslog migration, or compatibility with all Podman versions. Linux bind paths, credentials/config files, systemd runtime behavior and the separate Harbor logging migration still require real deployment testing.
+
 ## Next development step
 
-Add Linux integration tests against the real Quadlet generator and supported Podman versions, then expand health checks, network attachment options and richer commands/mounts with diagnostics and fixtures.
+Add Linux deployment/readiness tests and a wider Podman version matrix, then design Harbor's logging migration separately and expand health checks, network attachment options and richer commands/mounts with explicit diagnostics.
 
 ## License
 
