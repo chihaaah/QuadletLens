@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#f5f5f2" />
+    <script>
+      // Resolve preferences before first paint; Compose content is never stored.
+      let theme, language;
+      try {
+        theme = localStorage.getItem("compose2quadlet.theme");
+        language = localStorage.getItem("compose2quadlet.language");
+      } catch {}
+      document.documentElement.dataset.theme =
+        theme === "light" || theme === "dark"
+          ? theme
+          : matchMedia("(prefers-color-scheme: dark)").matches
+            ? "dark"
+            : "light";
+      document.documentElement.lang =
+        language === "en" || language === "ja"
+          ? language
+          : /^ja(?:-|$)/i.test(navigator.language)
+            ? "ja"
+            : "en";
+    </script>
+    <meta
+      name="description"
+      content="Convert Docker Compose YAML to Podman Quadlet files locally in your browser. No uploads."
+    />
+    <title>Compose2Quadlet</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
