@@ -4,6 +4,7 @@ import { convertCompose, type ConversionResult } from "@compose2quadlet/core";
 import { download, makeArchive } from "./download";
 import { translate, type MessageKey, type Notice } from "./i18n";
 import { diagnosticMessage } from "./diagnostics-i18n";
+import { Icon } from "./Icon";
 import {
   browserLanguage,
   preferenceKeys,
@@ -204,7 +205,6 @@ function App() {
             >
               EN
             </button>
-            <span aria-hidden="true">/</span>
             <button
               lang="ja"
               aria-label="日本語"
@@ -220,25 +220,7 @@ function App() {
             aria-label={t(theme === "dark" ? "switchLight" : "switchDark")}
             title={t(theme === "dark" ? "switchLight" : "switchDark")}
           >
-            <svg
-              viewBox="0 0 24 24"
-              width="16"
-              height="16"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.6"
-              aria-hidden="true"
-            >
-              {theme === "dark" ? (
-                <>
-                  <circle cx="12" cy="12" r="4" />
-                  <path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M5 19l1.5-1.5m11-11L19 5" />
-                </>
-              ) : (
-                <path d="M20.5 14A8.5 8.5 0 0 1 10 3.5 8.5 8.5 0 1 0 20.5 14Z" />
-              )}
-            </svg>
-            <span>{t(theme === "dark" ? "dark" : "light")}</span>
+            <Icon name={theme === "dark" ? "sun" : "moon"} />
           </button>
           <a
             className="github-link"
@@ -246,7 +228,7 @@ function App() {
             target="_blank"
             rel="noreferrer"
           >
-            GitHub <span aria-hidden="true">↗</span>
+            GitHub <Icon name="external" />
           </a>
         </div>
       </header>
@@ -275,6 +257,7 @@ function App() {
             </div>
             <div className="toolbar source-tools">
               <button onClick={() => fileInput.current?.click()}>
+                <Icon name="open" />
                 {t("open")}
               </button>
               <input
@@ -300,6 +283,7 @@ function App() {
               spellCheck={false}
               value={input}
               wrap="off"
+              aria-invalid={errors > 0 && !dirty}
               onChange={(e) => edit(e.target.value)}
               aria-describedby="input-help"
             />
@@ -390,6 +374,7 @@ function App() {
             )}
             <div className="pane-footer export-actions">
               <button disabled={!active || dirty} onClick={() => void copy()}>
+                <Icon name="copy" />
                 {t("copy")}
               </button>
               <button
@@ -404,6 +389,7 @@ function App() {
                   }
                 }}
               >
+                <Icon name="download" />
                 {t("download")}
               </button>
               <button disabled={!result.files.length || dirty} onClick={zip}>
@@ -432,6 +418,15 @@ function App() {
                 {result.diagnostics.map((d, i) => (
                   <li key={i} className={d.severity}>
                     <span className="severity">
+                      <Icon
+                        name={
+                          d.severity === "warning"
+                            ? "warning"
+                            : d.severity === "info"
+                              ? "info"
+                              : "error"
+                        }
+                      />
                       {t(
                         d.severity === "warning"
                           ? "warning"

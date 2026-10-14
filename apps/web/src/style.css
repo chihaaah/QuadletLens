@@ -10,13 +10,12 @@
   scrollbar-gutter: stable;
   --page: #f5f5f2;
   --surface: #fafaf8;
+  --toolbar: #eeefec;
   --editor: #fdfdfa;
-  --hover: #eaece8;
   --text: #272c33;
   --muted: #626973;
   --border: #d4d8d3;
   --accent: #315da8;
-  --accent-hover: #284d8b;
   --on-accent: #ffffff;
   --selection: #e8edf5;
   --warning: #775211;
@@ -26,25 +25,31 @@
   --info: #3a5f7c;
   --info-bg: #e8eef2;
   --code-section: #3d6850;
-  --code-key: #315da8;
-  --radius: 5px;
+  --code-key: #4a5966;
+  --radius: 8px;
+  --state-hover: 0.08;
+  --state-focus: 0.12;
+  --state-pressed: 0.16;
+  --motion: 150ms;
   --code-font:
     ui-monospace, "SFMono-Regular", Consolas, "Liberation Mono", monospace;
   --editor-height: clamp(320px, calc(100svh - 420px), 560px);
   background: var(--page);
   color: var(--text);
+  transition:
+    background-color var(--motion),
+    color var(--motion);
 }
 :root[data-theme="dark"] {
   color-scheme: dark;
   --page: #202328;
   --surface: #25292f;
+  --toolbar: #2b3037;
   --editor: #22262b;
-  --hover: #32383f;
   --text: #e1e4e8;
   --muted: #a5adb7;
   --border: #424950;
   --accent: #abc7f7;
-  --accent-hover: #c0d6fb;
   --on-accent: #1c304d;
   --selection: #303c50;
   --warning: #e2bf7c;
@@ -54,7 +59,7 @@
   --info: #b0cce0;
   --info-bg: #2c3842;
   --code-section: #acd3b8;
-  --code-key: #abc7f7;
+  --code-key: #b8c4cf;
 }
 * {
   box-sizing: border-box;
@@ -71,22 +76,53 @@ a {
   -webkit-tap-highlight-color: transparent;
 }
 button {
+  position: relative;
+  isolation: isolate;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
   cursor: pointer;
   font-size: 12px;
   line-height: 1.3;
-  padding: 6px 10px;
-  min-height: 30px;
+  padding: 7px 12px;
+  min-height: 32px;
   color: var(--text);
-  background: var(--surface);
+  background: transparent;
   border: 1px solid var(--border);
   border-radius: var(--radius);
   white-space: nowrap;
+  transition:
+    background-color var(--motion),
+    border-color var(--motion),
+    color var(--motion),
+    outline-color var(--motion);
 }
-button:hover:not(:disabled) {
-  background: var(--hover);
+/* A shared state layer leaves labels readable and avoids moving controls. */
+button::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background: currentColor;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--motion);
+}
+@media (hover: hover) {
+  button:hover:not(:disabled)::before {
+    opacity: var(--state-hover);
+  }
+}
+button:focus-visible:not(:disabled)::before {
+  opacity: var(--state-focus);
+}
+button:active:not(:disabled)::before {
+  opacity: var(--state-pressed);
 }
 button:disabled {
-  opacity: 0.5;
+  opacity: 0.38;
   cursor: not-allowed;
 }
 button:focus-visible,
@@ -103,6 +139,7 @@ a:hover {
   color: var(--accent);
 }
 .app-header {
+  background: var(--surface);
   min-height: 56px;
   display: flex;
   align-items: center;
@@ -110,6 +147,9 @@ a:hover {
   gap: 16px;
   padding: 12px 28px;
   border-bottom: 1px solid var(--border);
+  transition:
+    background-color var(--motion),
+    border-color var(--motion);
 }
 h1 {
   font-size: 16px;
@@ -125,35 +165,69 @@ h1 {
 .language-switch {
   display: flex;
   align-items: center;
-  gap: 2px;
+  gap: 0;
+  height: 32px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
   color: var(--muted);
   font-size: 12px;
 }
 .language-switch button {
-  background: none;
-  border-color: transparent;
+  border: 0;
+  border-radius: 0;
   color: var(--muted);
-  padding: 5px;
-  min-width: 30px;
+  padding: 5px 8px;
+  min-width: 36px;
+  min-height: 30px;
+}
+.language-switch button:first-child {
+  border-radius: 7px 0 0 7px;
+  border-right: 1px solid var(--border);
+}
+.language-switch button:last-child {
+  border-radius: 0 7px 7px 0;
+}
+.language-switch button:focus-visible {
+  outline-offset: -3px;
 }
 .language-switch button[aria-pressed="true"] {
-  color: var(--text);
+  color: var(--accent);
+  background: var(--selection);
   font-weight: 600;
-  text-decoration: underline;
-  text-underline-offset: 5px;
 }
 .theme-toggle {
   display: inline-flex;
   align-items: center;
-  gap: 7px;
+  width: 32px;
+  height: 32px;
+  padding: 6px;
   border-color: transparent;
   background: none;
   color: var(--muted);
 }
 .github-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
   font-size: 12px;
   color: var(--muted);
   white-space: nowrap;
+}
+.icon {
+  width: 16px;
+  height: 16px;
+  flex: 0 0 16px;
+}
+.theme-toggle .icon {
+  width: 18px;
+  height: 18px;
+  flex-basis: 18px;
+}
+.github-link .icon {
+  width: 13px;
+  height: 13px;
+  flex-basis: 13px;
 }
 main {
   max-width: 1600px;
@@ -177,6 +251,10 @@ main {
   border-right: 1px solid var(--border);
 }
 .pane-heading {
+  background: var(--toolbar);
+  transition:
+    background-color var(--motion),
+    border-color var(--motion);
   min-height: 44px;
   display: flex;
   align-items: center;
@@ -200,11 +278,15 @@ h2 {
   font-family: var(--code-font);
 }
 .toolbar {
+  background: var(--toolbar);
+  transition:
+    background-color var(--motion),
+    border-color var(--motion);
   min-height: 44px;
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 7px 12px;
+  padding: 5px 12px;
   border-bottom: 1px solid var(--border);
 }
 .quiet {
@@ -219,6 +301,10 @@ h2 {
   text-align: right;
 }
 textarea {
+  transition:
+    background-color var(--motion),
+    color var(--motion),
+    box-shadow var(--motion);
   display: block;
   width: 100%;
   height: var(--editor-height);
@@ -237,10 +323,22 @@ textarea {
 textarea:focus-visible {
   box-shadow: inset 0 0 0 2px var(--accent);
 }
+textarea[aria-invalid="true"]:not(:focus-visible) {
+  box-shadow: inset 0 0 0 1px var(--error);
+}
+textarea::selection,
+.output ::selection {
+  background: var(--selection);
+  color: var(--text);
+}
 .dragging {
   box-shadow: inset 0 0 0 2px var(--accent);
 }
 .pane-footer {
+  background: var(--toolbar);
+  transition:
+    background-color var(--motion),
+    border-color var(--motion);
   min-height: 48px;
   display: flex;
   align-items: center;
@@ -260,10 +358,11 @@ button.primary {
   padding-inline: 18px;
   font-weight: 500;
 }
-button.primary:hover {
-  background: var(--accent-hover);
-}
 .file-tabs {
+  background: var(--toolbar);
+  transition:
+    background-color var(--motion),
+    border-color var(--motion);
   display: flex;
   align-items: stretch;
   min-height: 44px;
@@ -281,13 +380,16 @@ button.primary:hover {
 }
 .file-tabs button[aria-selected="true"] {
   background: var(--selection);
-  color: var(--text);
+  color: var(--accent);
   box-shadow: inset 0 -2px var(--accent);
 }
 .file-tabs button:focus-visible {
   outline-offset: -4px;
 }
 .output {
+  transition:
+    background-color var(--motion),
+    color var(--motion);
   height: var(--editor-height);
   min-height: 240px;
   flex: 1 1 var(--editor-height);
@@ -395,14 +497,36 @@ button.primary:hover {
   border-bottom: 1px solid var(--border);
 }
 .severity {
-  min-width: 98px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  min-width: 114px;
   text-align: center;
   padding: 3px 6px;
-  border-radius: 3px;
+  border-radius: 6px;
   font-size: 10px;
   line-height: 1.5;
   color: var(--warning);
   background: var(--warning-bg);
+}
+.severity .icon {
+  width: 13px;
+  height: 13px;
+  flex-basis: 13px;
+}
+.diagnostics li {
+  border-left: 2px solid transparent;
+  padding-left: 10px;
+}
+.diagnostics li.warning {
+  border-left-color: var(--warning);
+}
+.diagnostics li.error {
+  border-left-color: var(--error);
+}
+.diagnostics li.info {
+  border-left-color: var(--info);
 }
 .error .severity {
   color: var(--error);
@@ -500,10 +624,7 @@ footer {
     gap: 5px;
   }
   .theme-toggle {
-    padding: 5px;
-  }
-  .theme-toggle span {
-    display: none;
+    padding: 6px;
   }
   main {
     padding: 12px;
@@ -527,10 +648,16 @@ footer {
     padding-inline: 8px;
   }
   .severity {
-    min-width: 74px;
-    max-width: 74px;
+    min-width: 86px;
+    max-width: 86px;
+    flex-wrap: wrap;
   }
   .diagnostics li {
     gap: 10px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --motion: 0ms;
   }
 }
