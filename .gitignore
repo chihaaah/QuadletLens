@@ -1,4 +1,5 @@
 # Logs
+quadlet-report/
 logs
 *.log
 npm-debug.log*

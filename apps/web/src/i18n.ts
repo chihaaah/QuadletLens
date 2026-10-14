@@ -23,6 +23,11 @@ const en = {
   download: "Download",
   downloadAll: "Download all",
   diagnostics: "Diagnostics",
+  loggingGroup: "Logging",
+  loggingCount: "{count} errors across {services} services",
+  loggingMigration:
+    "Logging requires manual migration. Original diagnostics remain in details.",
+  showDetails: "Show details",
   errors: "{count} errors",
   warnings: "{count} to review",
   noIssues: "No issues found",
@@ -68,6 +73,11 @@ const ja: Messages = {
   download: "ダウンロード",
   downloadAll: "すべてダウンロード",
   diagnostics: "診断",
+  loggingGroup: "ログ設定",
+  loggingCount: "{services} サービスで {count} 件のエラー",
+  loggingMigration:
+    "ログ設定は手動で移行してください。元の診断は詳細で確認できます。",
+  showDetails: "詳細を表示",
   errors: "エラー {count} 件",
   warnings: "要確認 {count} 件",
   noIssues: "問題は見つかりませんでした",

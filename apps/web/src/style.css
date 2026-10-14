@@ -489,7 +489,57 @@ button.primary {
   padding: 0;
   margin: 0;
 }
-.diagnostics li {
+.logging-group {
+  border-bottom: 1px solid var(--border);
+  padding: 12px 0 12px 10px;
+  border-left: 2px solid var(--error);
+}
+.logging-group summary {
+  cursor: pointer;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 12px;
+}
+.logging-group summary:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+.logging-group summary > .icon {
+  color: var(--error);
+  margin-top: 2px;
+}
+.logging-group summary strong {
+  font-weight: 600;
+}
+.group-count {
+  margin-left: 12px;
+  color: var(--error);
+}
+.group-description {
+  display: block;
+  margin-top: 5px;
+  color: var(--muted);
+  line-height: 1.6;
+}
+.group-disclosure {
+  margin-left: auto;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.logging-group[open] .group-disclosure {
+  text-decoration: underline;
+}
+.logging-group > ul {
+  margin-top: 8px;
+}
+@media (max-width: 480px) {
+  .group-count {
+    display: block;
+    margin: 4px 0 0;
+  }
+}
+.diagnostic-entry {
   display: flex;
   align-items: start;
   gap: 14px;
@@ -515,17 +565,17 @@ button.primary {
   height: 13px;
   flex-basis: 13px;
 }
-.diagnostics li {
+.diagnostic-entry {
   border-left: 2px solid transparent;
   padding-left: 10px;
 }
-.diagnostics li.warning {
+.diagnostic-entry.warning {
   border-left-color: var(--warning);
 }
-.diagnostics li.error {
+.diagnostic-entry.error {
   border-left-color: var(--error);
 }
-.diagnostics li.info {
+.diagnostic-entry.info {
   border-left-color: var(--info);
 }
 .error .severity {
@@ -536,14 +586,14 @@ button.primary {
   color: var(--info);
   background: var(--info-bg);
 }
-.diagnostics li > div {
+.diagnostic-entry > div {
   min-width: 0;
 }
-.diagnostics li code {
+.diagnostic-entry code {
   font: 11px var(--code-font);
   overflow-wrap: anywhere;
 }
-.diagnostics li p {
+.diagnostic-entry p {
   margin: 4px 0 0;
   color: var(--muted);
   font-size: 12px;
@@ -652,7 +702,7 @@ footer {
     max-width: 86px;
     flex-wrap: wrap;
   }
-  .diagnostics li {
+  .diagnostic-entry {
     gap: 10px;
   }
 }

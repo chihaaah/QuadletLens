@@ -3,7 +3,7 @@ import { createRoot } from "react-dom/client";
 import { convertCompose, type ConversionResult } from "@compose2quadlet/core";
 import { download, makeArchive } from "./download";
 import { translate, type MessageKey, type Notice } from "./i18n";
-import { diagnosticMessage } from "./diagnostics-i18n";
+import { DiagnosticList } from "./DiagnosticList";
 import { Icon } from "./Icon";
 import {
   browserLanguage,
@@ -414,36 +414,10 @@ function App() {
             tabIndex={result.diagnostics.length ? 0 : undefined}
           >
             {result.diagnostics.length ? (
-              <ul>
-                {result.diagnostics.map((d, i) => (
-                  <li key={i} className={d.severity}>
-                    <span className="severity">
-                      <Icon
-                        name={
-                          d.severity === "warning"
-                            ? "warning"
-                            : d.severity === "info"
-                              ? "info"
-                              : "error"
-                        }
-                      />
-                      {t(
-                        d.severity === "warning"
-                          ? "warning"
-                          : d.severity === "info"
-                            ? "info"
-                            : d.code === "unsupported"
-                              ? "unsupported"
-                              : "error",
-                      )}
-                    </span>
-                    <div>
-                      <code>{d.path}</code>
-                      <p>{diagnosticMessage(d, language)}</p>
-                    </div>
-                  </li>
-                ))}
-              </ul>
+              <DiagnosticList
+                diagnostics={result.diagnostics}
+                language={language}
+              />
             ) : (
               <p className="clean">{t("noIssues")}</p>
             )}
