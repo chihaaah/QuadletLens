@@ -15,10 +15,10 @@ npm install
 npm run dev
 ```
 
-Open Vite's localhost URL (normally `http://127.0.0.1:5173`). Paste YAML or open/drop one `.yml`/`.yaml` file, select **Convert**, review diagnostics, then select a generated file to copy/download it or download everything as ZIP. Editing input disables exports until the next conversion.
+Open Vite's localhost URL (normally `http://127.0.0.1:5173`). Paste YAML or open/drop one `.yml`/`.yaml` file, select **Convert**, review diagnostics, then select a generated file to copy/download it or download everything as ZIP. Editing input disables exports until the next conversion. Use EN / JP for English/Japanese and the theme toggle for light/dark mode; preferences persist locally. Initial defaults follow the browser language and system color scheme. See [DESIGN.md](DESIGN.md) for the UI design rules.
 
 ```sh
-npm test                # Converter and ZIP tests
+npm test                # Converter, ZIP and UI preference tests
 npm run test:watch      # Vitest watch mode
 npm run typecheck       # Strict TypeScript checks
 npm run build           # Typecheck, core declarations/JS, production web bundle
@@ -108,7 +108,7 @@ The generator applies `[Install]`/`WantedBy=default.target`; do not use `systemc
 
 ## Privacy
 
-**No uploads. Your Compose file stays in your browser.** Parsing, conversion, diagnostics, reading, copying, downloads and ZIP creation run locally. There is no backend API, database, analytics, telemetry, upload, remote font or CDN dependency. Input lives in page memory and is not saved to browser storage. After initial load, conversion/ZIP export require no network request. The Source link visits GitHub only when clicked. Initial loading uses the static host; this is not a service-worker/PWA offline-install feature.
+**No uploads. Your Compose file stays in your browser.** Parsing, conversion, diagnostics, reading, copying, downloads and ZIP creation run locally. There is no backend API, database, analytics, telemetry, upload, remote font or CDN dependency. Input lives in page memory and is not saved to browser storage. Only explicit theme/language preferences are stored locally; translations are bundled with the app. After initial load, conversion/ZIP export require no network request. The GitHub link visits GitHub only when clicked. Initial loading uses the static host; this is not a service-worker/PWA offline-install feature.
 
 ## GitHub Pages deployment
 
