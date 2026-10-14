@@ -24,3 +24,30 @@ services:
     image: nginx:latest
     ports:
       - "8080:80"
+```
+
+Generated Quadlet:
+
+```ini
+[Container]
+Image=nginx:latest
+PublishPort=8080:80
+```
+
+## Planned Features
+
+- Compose compatibility diagnostics
+- `.container` generation
+- `.network` generation
+- `.volume` generation
+- Multi-container Compose support
+- Harbor Compose conversion
+- Download generated Quadlet files as ZIP
+
+## Privacy
+
+Compose files are processed entirely in your browser and are not uploaded to a server.
+
+## License
+
+Apache-2.0
