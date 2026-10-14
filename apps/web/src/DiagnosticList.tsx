@@ -70,7 +70,12 @@ export function DiagnosticList({
                   </span>
                 </span>
                 <span className="group-disclosure">
-                  {translate(language, "showDetails")}
+                  <span className="when-collapsed">
+                    {translate(language, "showDetails")}
+                  </span>
+                  <span className="when-expanded">
+                    {translate(language, "hideDetails")}
+                  </span>
                 </span>
               </summary>
               <ul>

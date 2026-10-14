@@ -40,5 +40,7 @@ export function groupDiagnostics(
         serviceCount: 0,
       });
   }
-  return groups;
+  return logging
+    ? [logging, ...groups.filter((group) => group !== logging)]
+    : groups;
 }

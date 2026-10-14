@@ -530,6 +530,13 @@ button.primary {
 .logging-group[open] .group-disclosure {
   text-decoration: underline;
 }
+.when-expanded,
+.logging-group[open] .when-collapsed {
+  display: none;
+}
+.logging-group[open] .when-expanded {
+  display: inline;
+}
 .logging-group > ul {
   margin-top: 8px;
 }

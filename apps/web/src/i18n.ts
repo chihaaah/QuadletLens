@@ -28,6 +28,7 @@ const en = {
   loggingMigration:
     "Logging requires manual migration. Original diagnostics remain in details.",
   showDetails: "Show details",
+  hideDetails: "Hide details",
   errors: "{count} errors",
   warnings: "{count} to review",
   noIssues: "No issues found",
@@ -78,6 +79,7 @@ const ja: Messages = {
   loggingMigration:
     "ログ設定は手動で移行してください。元の診断は詳細で確認できます。",
   showDetails: "詳細を表示",
+  hideDetails: "詳細を閉じる",
   errors: "エラー {count} 件",
   warnings: "要確認 {count} 件",
   noIssues: "問題は見つかりませんでした",
