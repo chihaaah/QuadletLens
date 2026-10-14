@@ -86,6 +86,14 @@ A shared default `network-default.network` preserves service-name DNS/connectivi
 
 Managed resources default to Quadlet's `systemd-` names rather than Compose project names. Warnings call out data migration and network isolation; use explicit resource `name` where appropriate. Avoid colliding filenames/resources from unrelated projects in the same Quadlet directory. Relative bind/env paths resolve beside the installed Quadlet, not beside the original Compose file.
 
+## Capabilities, shared memory and Harbor
+
+`cap_add` and `cap_drop` lists map to `AddCapability` and `DropCapability` with recognized Linux names/ALL and optional CAP_ prefixes. `shm_size` accepts positive numeric bytes or Compose RAM units (case-insensitive b/k/m/g/t/p, optional b/ib suffix); values normalize to explicit bytes. For example, Harbor's `1gb` is `ShmSize=1073741824`. Values must fit the JavaScript safe integer range; fractional unit sizes truncate to bytes. Zero is an error because Podman treats it as unlimited. Capabilities and host execution context still require Linux runtime verification.
+
+Logging is explicitly unsupported. `logging.driver: syslog` produces a specific error explaining Docker daemon forwarding versus Podman/host networking. `logging.options` gets its own diagnostic; the converter never substitutes journald or emits logging PodmanArgs. Other logging drivers/settings also produce errors.
+
+The [official Harbor v2.15.4 fixture and compatibility inventory](tests/fixtures/harbor/v2.15.4/README.md) pin the official installer template, profile inputs and rendered `docker-compose.yml`. HTTPS/Trivy/metrics exercise 11 services. All fields except logging now map, with review diagnostics; the unchanged fixture deliberately blocks exports on 20 logging errors. This does not claim a deployable Harbor migration.
+
 ## Unsupported feature behavior
 
 All other fields, including `build`, `healthcheck`, `deploy`, `profiles`, `secrets`, `configs`, `privileged`, `network_mode`, top-level `name`, `include` and `extends`, produce path-specific errors. Unknown nested options also produce errors. **Any error returns no files and blocks exports.** Unsupported configuration is never silently dropped. Warnings require review; info explains metadata handling.

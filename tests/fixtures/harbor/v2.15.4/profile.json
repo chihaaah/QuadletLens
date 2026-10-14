@@ -1,0 +1,18 @@
+{
+  "version": "v2.15.4",
+  "reg_version": "v2.15.4",
+  "redis_version": "v2.15.4",
+  "trivy_adapter_version": "v2.15.4",
+  "data_volume": "/data",
+  "log_location": "/var/log/harbor",
+  "protocol": "https",
+  "http_port": 80,
+  "https_port": 443,
+  "external_database": false,
+  "external_redis": false,
+  "with_trivy": true,
+  "gcs_keyfile": null,
+  "uaa_ca_file": null,
+  "internal_tls": { "enabled": false },
+  "metric": { "enabled": true, "port": 9090 }
+}

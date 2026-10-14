@@ -1,4 +1,5 @@
 import { parseDocument } from "yaml";
+import { normalizeCapability, normalizeShmSize } from "./compose-values.js";
 
 export interface GeneratedFile {
   filename: string;
@@ -370,12 +371,79 @@ export function convertCompose(source: string): ConversionResult {
         "working_dir",
         "restart",
         "depends_on",
+        "cap_add",
+        "cap_drop",
+        "shm_size",
+        "logging",
       ],
       path,
     );
     const container: string[] = [];
     const unit: string[] = [`Description=Compose service ${name}`];
     const service: string[] = [];
+    for (const [key, directive] of [
+      ["cap_add", "AddCapability"],
+      ["cap_drop", "DropCapability"],
+    ] as const) {
+      if (!owns(s, key)) continue;
+      for (const [i, capability] of list(s[key], `${path}.${key}`).entries()) {
+        const normalized = normalizeCapability(capability);
+        if (normalized === undefined)
+          error(
+            `${path}.${key}[${i}]`,
+            "Expected a recognized Linux capability name or ALL, optionally prefixed with CAP_.",
+            "invalid-value",
+          );
+        else container.push(`${directive}=${normalized}`);
+      }
+    }
+    if (owns(s, "shm_size")) {
+      const bytes = normalizeShmSize(s.shm_size);
+      if (bytes === undefined)
+        error(
+          `${path}.shm_size`,
+          "Expected a non-negative byte count or Compose RAM size (b, k/kb/kib, m/mb/mib, g/gb/gib, t/tb/tib, p/pb/pib), within the safe integer range.",
+          "invalid-value",
+        );
+      else if (bytes === "0")
+        error(
+          `${path}.shm_size`,
+          "Zero shm_size is not converted because Podman interprets it as unlimited. Set an explicit positive size.",
+        );
+      else container.push(`ShmSize=${bytes}`);
+    }
+    if (owns(s, "logging")) {
+      if (!record(s.logging))
+        error(
+          `${path}.logging`,
+          "Expected a logging mapping.",
+          "invalid-value",
+        );
+      else {
+        unknown(s.logging, ["driver", "options"], `${path}.logging`);
+        if (s.logging.driver === "syslog") {
+          error(
+            `${path}.logging.driver`,
+            "Docker syslog logging cannot be safely mapped to Podman Quadlet. The Docker daemon forwards syslog to its configured endpoint; Podman logging drivers and host/container networking differ. Migrate the log collector and logging options explicitly. No LogDriver or PodmanArgs is generated.",
+            "unsupported",
+          );
+        } else if (owns(s.logging, "driver"))
+          error(
+            `${path}.logging.driver`,
+            "Logging drivers require explicit migration and are not converted.",
+          );
+        if (owns(s.logging, "options"))
+          error(
+            `${path}.logging.options`,
+            "Logging options are not converted. Preserve endpoint, tag and transport settings in a reviewed logging migration.",
+          );
+        if (!owns(s.logging, "driver") && !owns(s.logging, "options"))
+          error(
+            `${path}.logging`,
+            "Logging settings require explicit migration and are not converted.",
+          );
+      }
+    }
     const image = text(s.image, `${path}.image`);
     if (image) {
       if (!/^[a-zA-Z0-9][a-zA-Z0-9._/:@-]*$/.test(image))

@@ -3,6 +3,21 @@ import type { Language } from "./preferences";
 
 // Presentation-only translations. Core diagnostics and generated files stay unchanged.
 const messages: Record<string, string> = {
+  "Zero shm_size is not converted because Podman interprets it as unlimited. Set an explicit positive size.":
+    "Podman は shm_size の 0 を無制限として扱うため、自動変換しません。正のサイズを明示してください。",
+  "Expected a recognized Linux capability name or ALL, optionally prefixed with CAP_.":
+    "既知の Linux capability 名または ALL を指定してください。CAP_ 接頭辞も使用できます。",
+  "Expected a non-negative byte count or Compose RAM size (b, k/kb/kib, m/mb/mib, g/gb/gib, t/tb/tib, p/pb/pib), within the safe integer range.":
+    "shm_size は安全な整数範囲内の非負バイト数、または Compose の RAM サイズ（b・k/kb/kib・m/mb/mib・g/gb/gib・t/tb/tib・p/pb/pib）で指定してください。",
+  "Expected a logging mapping.": "logging はマッピングで指定してください。",
+  "Docker syslog logging cannot be safely mapped to Podman Quadlet. The Docker daemon forwards syslog to its configured endpoint; Podman logging drivers and host/container networking differ. Migrate the log collector and logging options explicitly. No LogDriver or PodmanArgs is generated.":
+    "Docker の syslog ログ転送は安全に Quadlet へ変換できません。Docker daemon からの転送と Podman のログドライバー・ホスト／コンテナのネットワークは異なります。ログ収集先と logging オプションを明示的に移行してください。LogDriver や PodmanArgs は生成しません。",
+  "Logging drivers require explicit migration and are not converted.":
+    "ログドライバーは自動変換しません。明示的に移行してください。",
+  "Logging options are not converted. Preserve endpoint, tag and transport settings in a reviewed logging migration.":
+    "logging オプションは変換しません。転送先・tag・通信方式を確認し、ログ移行時に保持してください。",
+  "Logging settings require explicit migration and are not converted.":
+    "logging 設定は自動変換しません。明示的に移行してください。",
   "Compose extension metadata is not emitted.":
     "Compose の拡張メタデータは出力されません。",
   "This Compose setting is not supported by the MVP. Remove it or migrate it manually.":
