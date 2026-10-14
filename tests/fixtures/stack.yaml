@@ -1,0 +1,35 @@
+services:
+  app:
+    image: docker.io/library/alpine:3
+    container_name: demo-app
+    ports:
+      - target: 80
+        published: "8080"
+        host_ip: 127.0.0.1
+        protocol: tcp
+        mode: host
+    environment:
+      GREETING: hello world
+      EMPTY: ""
+      COUNT: 2
+    env_file: ./app.env
+    volumes:
+      - data:/data:ro
+      - ./config:/config:ro
+    networks:
+      - front
+    command: ["-c", "echo hello"]
+    entrypoint: ["/bin/sh"]
+    user: "1000:1000"
+    working_dir: /data
+    restart: on-failure
+    depends_on:
+      database:
+        condition: service_started
+  database:
+    image: docker.io/library/postgres:17
+    networks: [front]
+volumes:
+  data: {}
+networks:
+  front: {}
