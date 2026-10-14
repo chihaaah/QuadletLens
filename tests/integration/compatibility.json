@@ -1,0 +1,9 @@
+{
+  "fedora": ["43", "44"],
+  "reviewedAt": "2026-10-14",
+  "sources": [
+    "https://fedoraproject.org/wiki/Design_Suite",
+    "https://www.fedoraproject.org/workstation/download/",
+    "https://docs.fedoraproject.org/en-US/releases/lifecycle/"
+  ]
+}

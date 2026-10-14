@@ -1,12 +1,27 @@
 name: Test and build
 on:
+  workflow_dispatch:
+  schedule:
+    - cron: '17 3 * * 1'
   pull_request:
   push:
     branches-ignore: [main]
 permissions:
   contents: read
 jobs:
+  compatibility:
+    runs-on: ubuntu-24.04
+    outputs:
+      matrix: ${{ steps.targets.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+      - id: targets
+        run: echo "matrix=$(node tests/integration/compatibility.mjs)" >> "$GITHUB_OUTPUT"
   check:
+    if: github.event_name != 'schedule' && github.event_name != 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -18,7 +33,11 @@ jobs:
       - run: npm test
       - run: npm run build
   quadlet:
-    name: Quadlet / Fedora 44 / Podman 5.8.7
+    needs: compatibility
+    name: Quadlet / Fedora ${{ matrix.fedora }}
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.compatibility.outputs.matrix) }}
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
@@ -30,10 +49,12 @@ jobs:
       - run: npm ci
       - run: npm run build --workspace @compose2quadlet/core
       - name: Install Fedora RPM userspace and run the real generator
+        env:
+          FEDORA_RELEASE: ${{ matrix.fedora }}
         run: bash tests/integration/fedora-ci.sh
       - uses: actions/upload-artifact@v7
         if: always()
         with:
-          name: quadlet-fedora44-output
+          name: quadlet-fedora-${{ matrix.fedora }}-output
           path: quadlet-report
           if-no-files-found: warn
