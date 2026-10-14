@@ -8,6 +8,7 @@ import {
   readFileSync,
   readdirSync,
   rmSync,
+  statSync,
   writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
@@ -33,11 +34,39 @@ const run = (command, args, env = {}) =>
     maxBuffer: 8 * 1024 * 1024,
     env: { ...process.env, ...env },
   });
+const packageFiles = [];
+if (process.env.INSTALLED_PACKAGE_MANIFEST)
+  packageFiles.push(
+    ...readFileSync(process.env.INSTALLED_PACKAGE_MANIFEST, "utf8").split(
+      /\r?\n/,
+    ),
+  );
+else
+  for (const [command, args] of [
+    ["rpm", ["-qal"]],
+    ["dpkg-query", ["-L", "podman", "systemd"]],
+  ]) {
+    const result = run(command, args);
+    if (result.status === 0) packageFiles.push(...result.stdout.split(/\r?\n/));
+  }
+function installedBinary(name) {
+  for (const path of packageFiles.filter((p) => basename(p) === name)) {
+    try {
+      accessSync(path, constants.X_OK);
+      if (statSync(path).isFile()) return path;
+    } catch {
+      /* Skip directories/broken links. */
+    }
+  }
+  return undefined;
+}
 for (const command of ["podman", "systemd"]) {
-  const result = run(command, ["--version"]);
+  const executable =
+    command === "systemd" ? (installedBinary("systemd") ?? command) : command;
+  const result = run(executable, ["--version"]);
   checkProcess(
     result,
-    `${command} --version (install Podman and systemd packages)`,
+    `${executable} --version (install Podman and systemd packages)`,
   );
   console.log(result.stdout.trim());
 }
@@ -46,19 +75,9 @@ function findGenerator() {
   if (process.env.QUADLET_GENERATOR)
     candidates = [process.env.QUADLET_GENERATOR];
   else {
-    // Read installed package manifests, including distributions with split Quadlet packages.
-    for (const [command, args] of [
-      ["rpm", ["-qal"]],
-      ["dpkg-query", ["-L", "podman"]],
-    ]) {
-      const result = run(command, args);
-      if (result.status === 0)
-        candidates.push(
-          ...result.stdout
-            .split(/\r?\n/)
-            .filter((p) => basename(p) === "podman-system-generator"),
-        );
-    }
+    candidates = packageFiles.filter(
+      (p) => basename(p) === "podman-system-generator",
+    );
   }
   for (const candidate of [...new Set(candidates)]) {
     try {

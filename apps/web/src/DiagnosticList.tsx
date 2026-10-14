@@ -58,7 +58,7 @@ export function DiagnosticList({
               <summary>
                 <Icon name="error" />
                 <span>
-                  <strong>{translate(language, "loggingGroup")}</strong>
+                  <strong>{translate(language, "loggingGroup")}</strong>{" "}
                   <span className="group-count">
                     {translate(language, "loggingCount", {
                       count: group.errorCount,

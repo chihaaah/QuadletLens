@@ -26,12 +26,15 @@ sudo mkdir -p "$root/workspace" "$root/tmp" "$root/dev" "$root/proc"
 sudo chmod 1777 "$root/tmp"
 if [ ! -e "$root/dev/null" ]; then sudo mknod -m 666 "$root/dev/null" c 1 3; fi
 sudo cp -a packages tests node_modules "$root/workspace/"
+# Query the same RPM database that host DNF populated; Fedora/Ubuntu rpm defaults differ.
+sudo rpm --root "$root" -qal | sudo tee "$root/workspace/installed-rpm-files.txt" > /dev/null
 # Podman's reexec/version code reads /proc/self/cmdline even without starting containers.
 sudo mount -t proc -o ro,nosuid,nodev,noexec proc "$root/proc"
 trap 'sudo umount "$root/proc"' EXIT
 mkdir -p quadlet-report
 sudo chroot "$root" /usr/bin/env PATH=/usr/bin:/bin \
   QUADLET_REPORT_DIR=/workspace/quadlet-report \
+  INSTALLED_PACKAGE_MANIFEST=/workspace/installed-rpm-files.txt \
   /usr/bin/node --test /workspace/tests/integration/quadlet.integration.mjs 2>&1 | tee quadlet-report/integration.log
 sudo cp -a "$root/workspace/quadlet-report/." ./quadlet-report/
 sudo chown -R "$(id -u):$(id -g)" ./quadlet-report
