@@ -7,6 +7,8 @@ export interface Diagnostic {
   code: string;
   path: string;
   message: string;
+  /** Issued only by the validator that understands the omitted feature. */
+  migration?: { feature: "logging"; previewOmission: boolean };
 }
 export type FindingCategory =
   | "direct"

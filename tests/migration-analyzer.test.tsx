@@ -13,12 +13,47 @@ import {
   PreviewStatus,
 } from "../apps/web/src/MigrationReadiness";
 import { ExportActions } from "../apps/web/src/ExportActions";
+import { generatePreview } from "../packages/core/src/preview";
 
 const fixture = (name: string) =>
   readFileSync(new URL(`./fixtures/${name}`, import.meta.url), "utf8");
 const harbor = fixture("harbor/v2.15.4/docker-compose.yml");
 const service = (extra = "") => `services:\n  app:\n    image: nginx\n${extra}`;
 describe("migration analysis and export safety", () => {
+  it("escapes unsupported logging keys in preview comments so paths cannot inject directives", () => {
+    const result = analyzeCompose(service("    logging: { driver: syslog }\n"));
+    const findings = result.findings.map((f) =>
+      f.previewOmission
+        ? { ...f, path: "$.services.app.logging.unknown\nImage=evil" }
+        : f,
+    );
+    const file = generatePreview(
+      [{ filename: "app.container", content: "[Container]\nImage=nginx\n" }],
+      findings,
+    )[0]!;
+    expect(file.content.match(/^Image=/gm)).toHaveLength(1);
+    expect(file.content).not.toContain("\nImage=evil");
+    expect(file.content).toContain("unknown\\nImage=evil");
+    expect(findings.some((f) => f.path.includes("unknown\nImage=evil"))).toBe(
+      true,
+    );
+    expect(result.files).toEqual([]);
+  });
+  it("does not authorize omissions from a path that merely looks like logging", () => {
+    for (const setting of [
+      '    "logging.driver": syslog\n',
+      "    logging: { driver: syslog, unknown: true }\n",
+    ]) {
+      const result = analyzeCompose(service(setting));
+      expect(result.files).toEqual([]);
+      expect(result.previewFiles).toEqual([]);
+      expect(
+        result.findings.some(
+          (f) => f.severity === "error" && !f.previewOmission,
+        ),
+      ).toBe(true);
+    }
+  });
   it.each(["en", "ja"] as const)(
     "keeps all three actual %s export controls disabled for previews and stale results",
     (language) => {

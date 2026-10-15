@@ -19,7 +19,7 @@ export function generatePreview(
       blockedBy: [...blockedBy],
       relatedBlockers: related.map((f) => f.id),
       content: blockers.length
-        ? `# PREVIEW ONLY - NOT EXPORTABLE. Migration is incomplete.\n${related.map((f) => `# Omitted: ${f.path} (${f.code})\n`).join("")}${file.content}`
+        ? `# PREVIEW ONLY - NOT EXPORTABLE. Migration is incomplete.\n${related.map((f) => `# Omitted: ${JSON.stringify(f.path)} (${f.code})\n`).join("")}${file.content}`
         : file.content,
     };
   });

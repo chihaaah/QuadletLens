@@ -324,8 +324,21 @@ export function planCompose(parsed: ParsedCompose): Plan {
       else container.push(`ShmSize=${bytes}`);
     }
     if (owns(s, "logging")) {
+      const loggingError = (
+        path: string,
+        message: string,
+        code = "unsupported",
+      ) => {
+        add("error", code, path, message);
+        const diagnostic = diagnostics.at(-1);
+        if (diagnostic)
+          diagnostic.migration = {
+            feature: "logging",
+            previewOmission: code === "unsupported",
+          };
+      };
       if (!record(s.logging))
-        error(
+        loggingError(
           `${path}.logging`,
           "Expected a logging mapping.",
           "invalid-value",
@@ -333,23 +346,23 @@ export function planCompose(parsed: ParsedCompose): Plan {
       else {
         unknown(s.logging, ["driver", "options"], `${path}.logging`);
         if (s.logging.driver === "syslog") {
-          error(
+          loggingError(
             `${path}.logging.driver`,
             "Docker syslog logging cannot be safely mapped to Podman Quadlet. The Docker daemon forwards syslog to its configured endpoint; Podman logging drivers and host/container networking differ. Migrate the log collector and logging options explicitly. No LogDriver or PodmanArgs is generated.",
             "unsupported",
           );
         } else if (owns(s.logging, "driver"))
-          error(
+          loggingError(
             `${path}.logging.driver`,
             "Logging drivers require explicit migration and are not converted.",
           );
         if (owns(s.logging, "options"))
-          error(
+          loggingError(
             `${path}.logging.options`,
             "Logging options are not converted. Preserve endpoint, tag and transport settings in a reviewed logging migration.",
           );
         if (!owns(s.logging, "driver") && !owns(s.logging, "options"))
-          error(
+          loggingError(
             `${path}.logging`,
             "Logging settings require explicit migration and are not converted.",
           );

@@ -13,12 +13,10 @@ export const isRecord = (value: unknown): value is Record<string, unknown> =>
 const serviceOf = (path: string) => /^\$\.services\.([^.\[]+)/.exec(path)?.[1];
 const featureOf = (path: string) =>
   /^\$\.services\.[^.]+\.([^.\[]+)/.exec(path)?.[1] ?? path;
-const loggingPath = (path: string) =>
-  /^\$\.services\.[^.]+\.logging(?:\.|$)/.test(path);
 
 function diagnosticFinding(d: Diagnostic, index: number): MigrationFinding {
   const service = serviceOf(d.path);
-  const logging = loggingPath(d.path);
+  const logging = d.migration?.feature === "logging";
   const invalid =
     d.code.startsWith("invalid-") ||
     [
@@ -62,7 +60,10 @@ function diagnosticFinding(d: Diagnostic, index: number): MigrationFinding {
             ? "migrate-unsupported"
             : "inspect-host",
     // An invalid logging object must not be described as an understood omission.
-    previewOmission: logging && !invalid && d.code === "unsupported",
+    previewOmission:
+      d.migration?.previewOmission === true &&
+      !invalid &&
+      d.code === "unsupported",
   };
 }
 const sourceFields: Readonly<Record<string, string>> = {
