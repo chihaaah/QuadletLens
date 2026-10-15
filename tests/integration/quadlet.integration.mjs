@@ -1,18 +1,15 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import {
-  accessSync,
-  constants,
   mkdirSync,
   mkdtempSync,
   readFileSync,
   readdirSync,
   rmSync,
-  statSync,
   writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
-import { basename, join } from "node:path";
+import { join } from "node:path";
 import { test } from "node:test";
 import { parse, stringify } from "yaml";
 import { convertCompose } from "../../packages/core/dist/index.js";
@@ -22,6 +19,7 @@ import {
   expectedServices,
   parseDryRun,
 } from "./generator-harness.mjs";
+import { installedBinary, runtimeMetadata } from "./runtime-environment.mjs";
 
 if (process.platform !== "linux")
   throw new Error(
@@ -49,50 +47,49 @@ else
     const result = run(command, args);
     if (result.status === 0) packageFiles.push(...result.stdout.split(/\r?\n/));
   }
-function installedBinary(name) {
-  for (const path of packageFiles.filter((p) => basename(p) === name)) {
-    try {
-      accessSync(path, constants.X_OK);
-      if (statSync(path).isFile()) return path;
-    } catch {
-      /* Skip directories/broken links. */
-    }
-  }
-  return undefined;
-}
+const versions = {};
 for (const command of ["podman", "systemd"]) {
   const executable =
-    command === "systemd" ? (installedBinary("systemd") ?? command) : command;
+    installedBinary(packageFiles, command) ?? command;
   const result = run(executable, ["--version"]);
   checkProcess(
     result,
     `${executable} --version (install Podman and systemd packages)`,
   );
   console.log(result.stdout.trim());
+  versions[command] = result.stdout.trim().split(/\r?\n/)[0];
 }
 function findGenerator() {
-  let candidates = [];
-  if (process.env.QUADLET_GENERATOR)
-    candidates = [process.env.QUADLET_GENERATOR];
-  else {
-    candidates = packageFiles.filter(
-      (p) => basename(p) === "podman-system-generator",
-    );
-  }
-  for (const candidate of [...new Set(candidates)]) {
-    try {
-      accessSync(candidate, constants.X_OK);
-      return candidate;
-    } catch {
-      /* Try next installed path. */
-    }
-  }
+  const candidate = installedBinary(
+    process.env.QUADLET_GENERATOR ? [process.env.QUADLET_GENERATOR] : packageFiles,
+    process.env.QUADLET_GENERATOR ? undefined : "podman-system-generator",
+  );
+  if (candidate) return candidate;
   throw new Error(
     "No executable podman-system-generator found in installed RPM/Podman package manifests. Install the distribution's Quadlet package, or set QUADLET_GENERATOR to its installed executable path.",
   );
 }
 const generator = findGenerator();
 console.log(`Quadlet generator: ${generator}`);
+function rpmVersion(name, provided) {
+  if (provided) return provided;
+  const result = run("rpm", ["-q", name]);
+  return result.status === 0 ? result.stdout.trim() : undefined;
+}
+const metadata = runtimeMetadata({
+  fedora: process.env.FEDORA_RELEASE,
+  podman: versions.podman,
+  podmanRpm: rpmVersion("podman", process.env.PODMAN_RPM),
+  systemd: versions.systemd,
+  systemdRpm: rpmVersion("systemd", process.env.SYSTEMD_RPM),
+  generator,
+  commit: process.env.TEST_COMMIT_SHA ?? process.env.GITHUB_SHA,
+});
+console.log(`Runtime metadata: ${JSON.stringify(metadata)}`);
+if (process.env.QUADLET_REPORT_DIR) {
+  mkdirSync(process.env.QUADLET_REPORT_DIR, { recursive: true });
+  writeFileSync(join(process.env.QUADLET_REPORT_DIR, "metadata.json"), `${JSON.stringify(metadata, null, 2)}\n`);
+}
 const fixture = (path) =>
   readFileSync(new URL(`../fixtures/${path}`, import.meta.url), "utf8");
 
