@@ -1,8 +1,8 @@
 # Compose2Quadlet
 
-Convert Docker Compose YAML into Podman Quadlet `.container`, `.network`, and `.volume` files entirely in your browser.
+A browser-local Docker Compose to Podman Quadlet migration analyzer and converter. Inspect compatibility, semantic differences, manual migration work and target Podman requirements, then review `.container`, `.network`, and `.volume` previews before exporting.
 
-**Status:** first working MVP with a conservative Compose subset. Review diagnostics and validate units on your Linux/Podman host before installing them.
+**Status:** conservative migration analysis with a supported Compose subset and real Quadlet generator validation in CI. Processing stays local; unsupported settings block export instead of disappearing. This is not a Docker Compose runtime, deployment orchestrator or drop-in `docker compose` replacement, and does not guarantee applications will run correctly after migration. It provides no lifecycle commands or remote deployment.
 
 ## Local development
 
@@ -40,6 +40,13 @@ AGENTS.md             Project rules for contributors and coding agents
 
 npm workspaces connect app and core. Core imports neither React nor browser APIs. The web bundle includes the converter and its dependencies.
 
+```text
+Compose -> parser -> migration analyzer / mapping plan
+        -> preview generator -> export safety gate
+```
+
+`parser.ts` owns bounded YAML parsing/normalization. `planner.ts` validates Compose settings and records candidate mappings using the existing diagnostics. `analyzer.ts` projects those diagnostics and mapped directives into structured findings; it does not parse diagnostic prose. `capabilities.ts` centralizes verified directive requirements. `preview.ts` permits only explicitly understood omissions, then the public API applies the whole-document export gate. The analyzer has no UI or host-runtime dependency.
+
 ```ts
 import { convertCompose } from "@compose2quadlet/core";
 
@@ -52,6 +59,25 @@ const result = convertCompose(`services:
 // diagnostics: { severity: 'info' | 'warning' | 'error';
 //   code: string; path: string; message: string }[]
 ```
+
+### Migration analysis API
+
+`analyzeCompose(source, { targetPodmanVersion?: "5.2.0" })` and the backwards-compatible `convertCompose` entry point return the same result:
+
+- `files`: exportable files only. Any blocking finding keeps this empty, including an insufficient/invalid target version.
+- `previewFiles`: `{ filename, content, exportable, blockedBy, relatedBlockers }[]`. Blocker arrays reference stable finding IDs within the result. While blocked, **all** previews are non-exportable, including files with no local blocker. They contain a preview-only comment and per-file omitted paths.
+- `findings`: machine-readable code, severity, category, service, source path, feature, summary, remediation key, optional diagnostic reference and target requirement/evidence. Every original diagnostic remains present exactly once in this projection; successful mappings are separate findings.
+- `summary`: readiness, recognized resource counts (including implicit default network), category **finding counts**, mutually exclusive service status counts, blocking/affected/manual-service counts and logging counts. Direct/review/manual counts are not mutually exclusive service totals.
+- `services`: per-service readiness and related finding/blocker IDs. READY means accepted mappings, REVIEW means host/semantic review remains; neither guarantees deployment readiness. Global blockers affect every service.
+- `diagnostics`: complete legacy diagnostics for compatibility; target-version errors are added through the same analysis pipeline.
+
+Preview is conservative: currently only explicit unsupported logging settings may be omitted with blocking findings. Invalid YAML, unresolved interpolation, invalid values, unknown Compose features, ambiguous network/lifecycle settings and insufficient target versions suppress **the entire preview**. No sanitizing/reparsing or logging removal occurs in production input. No journald substitution or PodmanArgs workaround is generated. Copy, Download and ZIP only use `files`, never `previewFiles`; editing input or target invalidates export until reanalysis.
+
+The unchanged official Harbor fixture analyzes as **11 services, 1 network, 20 logging blockers across 10 services, 12 preview files and 0 exportable files**. PostgreSQL capabilities/shared memory and registry mounts/network remain visible; logging paths and manual migration guidance remain explicit. Preview syntax acceptance is separate from migration completeness.
+
+### Target Podman awareness
+
+Choose unspecified (verify on host) or enter a numeric `major.minor[.patch]` target. There is no assumed latest version or Fedora-to-Podman version mapping. Verified upstream directive baselines gate export for an older target. Unknown minima and unverified value/runtime behavior are marked **runtime verification required**, rather than assigned an invented version. The current capability evidence and limits are documented in [docs/CAPABILITIES.md](docs/CAPABILITIES.md). Current Fedora CI validates actual package versions from each run; it does not prove all historical boundary versions.
 
 `web.container` includes:
 
@@ -96,7 +122,7 @@ The [official Harbor v2.15.4 fixture and compatibility inventory](tests/fixtures
 
 ## Unsupported feature behavior
 
-All other fields, including `build`, `healthcheck`, `deploy`, `profiles`, `secrets`, `configs`, `privileged`, `network_mode`, top-level `name`, `include` and `extends`, produce path-specific errors. Unknown nested options also produce errors. **Any error returns no files and blocks exports.** Unsupported configuration is never silently dropped. Warnings require review; info explains metadata handling.
+All other fields, including `build`, `healthcheck`, `deploy`, `profiles`, `secrets`, `configs`, `privileged`, `network_mode`, top-level `name`, `include` and `extends`, produce path-specific errors. Unknown nested options also produce errors. **Any error returns no exportable `files` and blocks exports.** Only explicitly marked logging omissions permit a non-exportable preview; other unsupported semantics suppress it. Unsupported configuration is never silently dropped. Warnings require review; info explains metadata handling.
 
 Compose `$VAR`/`${VAR}` interpolation and `.env` resolution are unsupported: provide concrete values first. Compose `$$` becomes a literal dollar; literal `%` and `$` are escaped for systemd. Multiline/control-character values, unsafe names and ambiguous forms are rejected. Limits: 1 MB of text, 1000 services, 100 nesting levels, 50,000 parsed values, bounded YAML alias expansion.
 
@@ -146,7 +172,7 @@ Compatibility runs on PRs/feature-branch pushes, weekly (Monday 03:17 UTC), and 
 
 Each nginx/stack/Harbor test writes Quadlets to a fresh temporary directory and runs `QUADLET_UNIT_DIRS=<dir> <detected-generator> --user --dryrun`. It checks the emitted service set, then invokes the generator in ordinary output mode into another temporary directory to verify actual `.service` files and focused Podman arguments/dependencies. Nothing invokes those service commands. Exit failures, missing/partial unit output, and an intentionally invalid Quadlet are tested. Reports are collected even when an assertion fails.
 
-Harbor validation removes logging only from an in-memory **test-only** copy: 11 container units plus one network unit. The original fixture stays unchanged and normal conversion still fails on all 20 syslog driver/options errors. Browser diagnostic grouping is presentation-only: an expandable Logging summary exposes every original path in EN/JP, and exports remain blocked.
+Harbor validation removes logging only from an in-memory **test-only** copy: 11 container units plus one network unit. The same assertions also validate production preview files from the unchanged input, and compare their understood directives to that test-only equivalent. The original fixture stays unchanged and exports remain blocked on all 20 syslog driver/options errors. Migration readiness exposes every original path, service and category in EN/JP. Passing generator checks does not make the preview exportable or Harbor deployable.
 
 This validates generator syntax and emitted arguments for the configured Fedora/Podman environment, not Harbor deployability, image availability, application readiness, syslog migration, or compatibility with all Podman versions. Linux bind paths, credentials/config files, systemd runtime behavior and the separate Harbor logging migration still require real deployment testing.
 

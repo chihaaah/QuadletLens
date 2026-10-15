@@ -3,7 +3,9 @@ import { createRoot } from "react-dom/client";
 import { convertCompose, type ConversionResult } from "@compose2quadlet/core";
 import { download, makeArchive } from "./download";
 import { translate, type MessageKey, type Notice } from "./i18n";
-import { DiagnosticList } from "./DiagnosticList";
+import { MigrationReadiness, PreviewStatus } from "./MigrationReadiness";
+import { canExport } from "./export-safety";
+import { ExportActions } from "./ExportActions";
 import { Icon } from "./Icon";
 import {
   browserLanguage,
@@ -85,19 +87,20 @@ function App() {
   const [result, setResult] = useState<ConversionResult>(() =>
     convertCompose(sample),
   );
+  const [targetMode, setTargetMode] = useState("default");
+  const [targetVersion, setTargetVersion] = useState("");
   const [selected, setSelected] = useState("web.container");
   const [dirty, setDirty] = useState(false);
   const [dragging, setDragging] = useState(false);
   const [notice, setNotice] = useState<Notice | undefined>();
   const fileInput = useRef<HTMLInputElement>(null);
   const tabButtons = useRef(new Map<string, HTMLButtonElement>());
+  const visibleFiles = result.previewFiles;
+  const exportEnabled = canExport(result, dirty);
   const active =
-    result.files.find((f) => f.filename === selected) ?? result.files[0];
+    visibleFiles.find((f) => f.filename === selected) ?? visibleFiles[0];
   const errors = result.diagnostics.filter(
     (d) => d.severity === "error",
-  ).length;
-  const warnings = result.diagnostics.filter(
-    (d) => d.severity === "warning",
   ).length;
   const edit = (value: string) => {
     setInput(value);
@@ -105,19 +108,24 @@ function App() {
     setNotice(undefined);
   };
   const convert = () => {
-    const converted = convertCompose(input);
+    const converted = convertCompose(
+      input,
+      targetMode === "custom" ? { targetPodmanVersion: targetVersion } : {},
+    );
     setResult(converted);
     setSelected(
-      converted.files.find((f) => f.filename.endsWith(".container"))
+      converted.previewFiles.find((f) => f.filename.endsWith(".container"))
         ?.filename ??
-        converted.files[0]?.filename ??
+        converted.previewFiles[0]?.filename ??
         "",
     );
     setDirty(false);
     setNotice(
       converted.files.length
         ? { key: "generated", values: { count: converted.files.length } }
-        : { key: "blocked" },
+        : {
+            key: converted.previewFiles.length ? "previewGenerated" : "blocked",
+          },
     );
   };
   const load = async (files: FileList | File[]) => {
@@ -138,16 +146,19 @@ function App() {
     }
   };
   const copy = async () => {
-    if (!active || dirty) return;
+    const exportFile = result.files.find(
+      (file) => file.filename === active?.filename,
+    );
+    if (!exportFile || !exportEnabled) return;
     try {
-      await navigator.clipboard.writeText(active.content);
-      setNotice({ key: "copied", values: { filename: active.filename } });
+      await navigator.clipboard.writeText(exportFile.content);
+      setNotice({ key: "copied", values: { filename: exportFile.filename } });
     } catch {
       setNotice({ key: "copyFailed" });
     }
   };
   const zip = () => {
-    if (dirty || !result.files.length) return;
+    if (!exportEnabled) return;
     try {
       download(
         "compose2quadlet.zip",
@@ -163,7 +174,7 @@ function App() {
     event: React.KeyboardEvent<HTMLButtonElement>,
     index: number,
   ) => {
-    const length = result.files.length;
+    const length = visibleFiles.length;
     const next =
       event.key === "ArrowRight"
         ? (index + 1) % length
@@ -176,7 +187,7 @@ function App() {
               : undefined;
     if (next === undefined) return;
     event.preventDefault();
-    const filename = result.files[next]?.filename;
+    const filename = visibleFiles[next]?.filename;
     if (filename) {
       setSelected(filename);
       tabButtons.current.get(filename)?.focus();
@@ -233,6 +244,48 @@ function App() {
         </div>
       </header>
       <main>
+        <div className="target-controls">
+          <label htmlFor="target-mode">{t("target")}</label>
+          <select
+            id="target-mode"
+            value={targetMode}
+            onChange={(event) => {
+              setTargetMode(event.target.value);
+              setDirty(true);
+              setNotice(undefined);
+            }}
+          >
+            <option value="default">{t("targetDefault")}</option>
+            <option value="custom">{t("targetCustom")}</option>
+          </select>
+          {targetMode === "custom" && (
+            <>
+              <label className="sr-only" htmlFor="target-version">
+                {t("targetVersion")}
+              </label>
+              <input
+                id="target-version"
+                placeholder="5.2.0"
+                value={targetVersion}
+                onChange={(event) => {
+                  setTargetVersion(event.target.value);
+                  setDirty(true);
+                  setNotice(undefined);
+                }}
+              />
+            </>
+          )}
+        </div>
+        {dirty && (
+          <p className="review-note" role="status">
+            {t("staleDiagnostics")}
+          </p>
+        )}
+        <MigrationReadiness
+          key={result.findings.map((f) => f.id).join("|")}
+          result={result}
+          language={language}
+        />
         <div className="workspace">
           <section
             aria-labelledby="source-heading"
@@ -301,9 +354,9 @@ function App() {
             aria-labelledby="output-heading"
           >
             <div className="pane-heading">
-              <h2 id="output-heading">{t("output")}</h2>
+              <h2 id="output-heading">{t("previewHeading")}</h2>
               <span className="file-count">
-                {t("files", { count: result.files.length })}
+                {t("files", { count: visibleFiles.length })}
               </span>
             </div>
             <div
@@ -311,7 +364,7 @@ function App() {
               role="tablist"
               aria-label={t("fileList")}
             >
-              {result.files.map((f, i) => (
+              {visibleFiles.map((f, i) => (
                 <button
                   key={f.filename}
                   ref={(element) => {
@@ -331,6 +384,13 @@ function App() {
               ))}
             </div>
             {dirty && <p className="stale">{t("changed")}</p>}
+            {active && (
+              <PreviewStatus
+                file={active}
+                result={result}
+                language={language}
+              />
+            )}
             {active ? (
               <div
                 className="output"
@@ -370,59 +430,30 @@ function App() {
                 </pre>
               </div>
             ) : (
-              <div className="empty">{t("empty")}</div>
+              <div className="empty">{t("noPreview")}</div>
             )}
-            <div className="pane-footer export-actions">
-              <button disabled={!active || dirty} onClick={() => void copy()}>
-                <Icon name="copy" />
-                {t("copy")}
-              </button>
-              <button
-                disabled={!active || dirty}
-                onClick={() => {
-                  if (active) {
-                    download(active.filename, active.content);
-                    setNotice({
-                      key: "fileSaved",
-                      values: { filename: active.filename },
-                    });
-                  }
-                }}
-              >
-                <Icon name="download" />
-                {t("download")}
-              </button>
-              <button disabled={!result.files.length || dirty} onClick={zip}>
-                {t("downloadAll")} <span className="zip-label">ZIP</span>
-              </button>
-            </div>
+            <ExportActions
+              result={result}
+              dirty={dirty}
+              selected={active?.filename}
+              language={language}
+              onCopy={() => void copy()}
+              onZip={zip}
+              onDownload={() => {
+                const exportFile = result.files.find(
+                  (file) => file.filename === active?.filename,
+                );
+                if (exportFile && exportEnabled) {
+                  download(exportFile.filename, exportFile.content);
+                  setNotice({
+                    key: "fileSaved",
+                    values: { filename: exportFile.filename },
+                  });
+                }
+              }}
+            />
           </section>
         </div>
-        <section className="diagnostics" aria-labelledby="diagnostics-heading">
-          <div className="diagnostic-heading">
-            <h2 id="diagnostics-heading">{t("diagnostics")}</h2>
-            <div>
-              <span className={errors ? "error-count" : ""}>
-                {t("errors", { count: errors })}
-              </span>
-              <span>{t("warnings", { count: warnings })}</span>
-            </div>
-          </div>
-          {dirty && <p className="review-note">{t("staleDiagnostics")}</p>}
-          <div
-            className="diagnostic-body"
-            tabIndex={result.diagnostics.length ? 0 : undefined}
-          >
-            {result.diagnostics.length ? (
-              <DiagnosticList
-                diagnostics={result.diagnostics}
-                language={language}
-              />
-            ) : (
-              <p className="clean">{t("noIssues")}</p>
-            )}
-          </div>
-        </section>
         <footer>
           <span>{t("privacy")}</span>
           <span className="notice" role="status" aria-live="polite">

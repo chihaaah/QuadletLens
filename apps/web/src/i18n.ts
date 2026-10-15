@@ -1,6 +1,53 @@
 import type { Language } from "./preferences";
 
 const en = {
+  readiness: "Migration readiness",
+  ready: "READY",
+  review: "REVIEW",
+  blockedState: "BLOCKED",
+  analyzed:
+    "{services} services analyzed · {manual} need manual changes · {blockers} blocking findings",
+  resources: "{networks} networks · {volumes} volumes",
+  direct: "Direct mappings",
+  reviewCategory: "Needs review",
+  semantic: "Semantic differences",
+  versionCategory: "Version / runtime verification",
+  manual: "Manual migration",
+  invalid: "Invalid input",
+  compatibilityDetails: "Compatibility details",
+  serviceFilter: "Service",
+  categoryFilter: "Category",
+  all: "All",
+  mapping: "{feature} → {directive}",
+  loggingGuidance:
+    "Logging is excluded from this preview. Review Docker daemon forwarding, endpoint, transport and host networking before choosing a logging migration. No replacement is generated.",
+  runtimeGuidance:
+    "Verify the complete unit with the target host's installed Quadlet generator and runtime.",
+  invalidGuidance:
+    "Resolve the invalid or unresolved source value before migration.",
+  unsupportedGuidance:
+    "Investigate this Compose feature and migrate it explicitly; no safe preview is generated.",
+  hostGuidance:
+    "Review host paths, resource names and lifecycle semantics before deployment.",
+  requiresVersion: "{directive} requires Podman ≥ {version}.",
+  supportedVersion: "{directive}: supported by target (minimum {version}).",
+  verifyVersion:
+    "Runtime verification required; no complete minimum version guarantee.",
+  target: "Target Podman",
+  targetDefault: "Unspecified — verify on host",
+  targetCustom: "Custom version",
+  targetVersion: "Podman version (major.minor.patch)",
+  previewHeading: "Generated preview",
+  previewOnly: "PREVIEW ONLY — NOT EXPORTABLE",
+  previewBlocked:
+    "Export and copy disabled until all blocking findings are resolved.",
+  documentBlockers:
+    "This file is also blocked by the document's migration findings.",
+  sourcePath: "Source path",
+  findings: "{count} findings",
+  serviceReadiness: "Service readiness",
+  noPreview: "No safe preview available. Resolve the blocking findings.",
+  previewGenerated: "Preview generated; migration remains blocked.",
   home: "Compose2Quadlet home",
   language: "Language",
   light: "Light",
@@ -52,6 +99,53 @@ const en = {
 };
 type Messages = Record<keyof typeof en, string>;
 const ja: Messages = {
+  readiness: "移行の準備状況",
+  ready: "READY（変換可能）",
+  review: "REVIEW（要確認）",
+  blockedState: "BLOCKED（移行作業が必要）",
+  analyzed:
+    "{services} サービスを分析 · {manual} サービスは手動変更が必要 · 阻害 finding {blockers} 件",
+  resources: "ネットワーク {networks} 件 · ボリューム {volumes} 件",
+  direct: "直接マッピング",
+  reviewCategory: "確認が必要",
+  semantic: "動作の違い",
+  versionCategory: "バージョン・実行環境の確認",
+  manual: "手動移行",
+  invalid: "入力の問題",
+  compatibilityDetails: "互換性の詳細",
+  serviceFilter: "サービス",
+  categoryFilter: "カテゴリ",
+  all: "すべて",
+  mapping: "{feature} → {directive}",
+  loggingGuidance:
+    "logging はプレビューから除外しています。Docker daemon のログ転送・転送先・通信方式・ホストのネットワークを確認し、移行方針を決めてください。代替設定は生成しません。",
+  runtimeGuidance:
+    "移行先ホストの Quadlet generator と実行環境でユニット全体を検証してください。",
+  invalidGuidance: "移行前に無効な入力や未解決の値を修正してください。",
+  unsupportedGuidance:
+    "この Compose 機能を調査し、明示的に移行してください。安全なプレビューは生成しません。",
+  hostGuidance:
+    "配置先のパス・リソース名・ライフサイクルの違いを確認してください。",
+  requiresVersion: "{directive} には Podman {version} 以上が必要です。",
+  supportedVersion: "{directive}: 指定バージョンで対応（下限 {version}）。",
+  verifyVersion:
+    "実行環境での検証が必要です。全設定の最低対応バージョンは保証しません。",
+  target: "移行先 Podman",
+  targetDefault: "未指定 — ホストで検証",
+  targetCustom: "バージョンを指定",
+  targetVersion: "Podman バージョン（major.minor.patch）",
+  previewHeading: "生成プレビュー",
+  previewOnly: "PREVIEW ONLY — エクスポート不可",
+  previewBlocked:
+    "すべての阻害 finding を解決するまで、コピー・エクスポートは無効です。",
+  documentBlockers:
+    "このファイルもドキュメント全体の移行課題によってブロックされています。",
+  sourcePath: "入力パス",
+  findings: "finding {count} 件",
+  serviceReadiness: "サービスごとの準備状況",
+  noPreview:
+    "安全なプレビューを生成できません。阻害 finding を解決してください。",
+  previewGenerated: "プレビューを生成しました。移行課題の解決が必要です。",
   home: "Compose2Quadlet ホーム",
   language: "言語",
   light: "ライト",

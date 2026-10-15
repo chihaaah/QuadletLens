@@ -49,8 +49,7 @@ else
   }
 const versions = {};
 for (const command of ["podman", "systemd"]) {
-  const executable =
-    installedBinary(packageFiles, command) ?? command;
+  const executable = installedBinary(packageFiles, command) ?? command;
   const result = run(executable, ["--version"]);
   checkProcess(
     result,
@@ -61,7 +60,9 @@ for (const command of ["podman", "systemd"]) {
 }
 function findGenerator() {
   const candidate = installedBinary(
-    process.env.QUADLET_GENERATOR ? [process.env.QUADLET_GENERATOR] : packageFiles,
+    process.env.QUADLET_GENERATOR
+      ? [process.env.QUADLET_GENERATOR]
+      : packageFiles,
     process.env.QUADLET_GENERATOR ? undefined : "podman-system-generator",
   );
   if (candidate) return candidate;
@@ -88,7 +89,10 @@ const metadata = runtimeMetadata({
 console.log(`Runtime metadata: ${JSON.stringify(metadata)}`);
 if (process.env.QUADLET_REPORT_DIR) {
   mkdirSync(process.env.QUADLET_REPORT_DIR, { recursive: true });
-  writeFileSync(join(process.env.QUADLET_REPORT_DIR, "metadata.json"), `${JSON.stringify(metadata, null, 2)}\n`);
+  writeFileSync(
+    join(process.env.QUADLET_REPORT_DIR, "metadata.json"),
+    `${JSON.stringify(metadata, null, 2)}\n`,
+  );
 }
 const fixture = (path) =>
   readFileSync(new URL(`../fixtures/${path}`, import.meta.url), "utf8");
@@ -140,7 +144,9 @@ function validate(name, files, inspect) {
   }
 }
 function convert(source) {
-  const result = convertCompose(source);
+  const result = convertCompose(source, {
+    targetPodmanVersion: metadata.podman.replace(/^podman version /, ""),
+  });
   assert.deepEqual(
     result.diagnostics.filter((d) => d.severity === "error"),
     [],
@@ -155,6 +161,7 @@ test("nginx emits web.service and a real network service", () => {
   validate("nginx", convert(fixture("nginx.yaml")), (units) => {
     hasArg(units.get("web.service"), "--publish", "8080:80");
     hasArg(units.get("web.service"), "--network", "systemd-network-default");
+    hasArg(units.get("web.service"), "--network-alias", "web");
     assert.match(
       units.get("web.service"),
       /^Requires=.*network-default-network\.service/m,
@@ -170,6 +177,9 @@ test("stack emits containers, network, volume and dependency/command arguments",
     const app = units.get("app.service");
     hasArg(app, "--publish", "127.0.0.1:8080:80/tcp");
     hasArg(app, "--network", "systemd-network-front");
+    hasArg(app, "--network-alias", "app");
+    hasArg(app, "--workdir", "/data");
+    assert.match(execStart(app), /--entrypoint(?:=|\s+).*\/bin\/sh/);
     assert.match(
       execStart(app),
       /(?:-v|--volume)(?:=|\s+)systemd-volume-data:\/data:ro/,
@@ -187,6 +197,12 @@ test("Harbor original stays blocked; only a test copy without logging yields 12 
   const source = fixture("harbor/v2.15.4/docker-compose.yml");
   const original = convertCompose(source);
   assert.equal(original.files.length, 0);
+  assert.equal(original.previewFiles.length, 12);
+  assert(
+    original.previewFiles.every(
+      (file) => !file.exportable && file.blockedBy.length === 20,
+    ),
+  );
   assert.equal(
     original.diagnostics.filter((d) => d.severity === "error").length,
     20,
@@ -199,7 +215,7 @@ test("Harbor original stays blocked; only a test copy without logging yields 12 
     files.filter((f) => f.filename.endsWith(".container")).length,
     11,
   );
-  validate("harbor-test-only-no-logging", files, (units) => {
+  const inspectHarbor = (units) => {
     assert(units.has("core.service"));
     assert(units.has("network-harbor-network.service"));
     const database = units.get("postgresql.service");
@@ -215,7 +231,21 @@ test("Harbor original stays blocked; only a test copy without logging yields 12 
     assert.match(units.get("core.service"), /^Requires=.*postgresql\.service/m);
     for (const unit of units.values())
       assert.doesNotMatch(execStart(unit), /--log-driver|--log-opt/);
+  };
+  validate("harbor-test-only-no-logging", files, inspectHarbor);
+  // Also exercise the production preview gate on the unchanged original input.
+  validate("harbor-original-preview", original.previewFiles, inspectHarbor);
+  const withoutComments = (file) => ({
+    filename: file.filename,
+    content: file.content
+      .split("\n")
+      .filter((line) => !line.startsWith("#"))
+      .join("\n"),
   });
+  assert.deepEqual(
+    original.previewFiles.map(withoutComments),
+    files.map(withoutComments),
+  );
   assert.equal(fixture("harbor/v2.15.4/docker-compose.yml"), source);
 });
 test("real generator rejection cannot be mistaken for success", () => {
