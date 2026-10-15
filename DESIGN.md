@@ -26,6 +26,9 @@ References: [Material Web button hierarchy](https://github.com/material-componen
 
 ## Layout
 
+- The migration workflow starts with a compact target-version control and readiness strip above the editor. Show service/manual/blocker totals and clearly labelled finding counts, with flat separators and no cards. Native expandable logging, service and category/path details preserve every original diagnostic and keyboard access. Target/source edits mark the analysis stale and disable exports.
+- Output is a generated preview. Every blocked file displays a textual PREVIEW ONLY / not-exportable notice and its omitted paths, including a document-level blocker explanation for otherwise unaffected files. Viewing/selecting text remains possible; Copy, Download and ZIP remain disabled for the complete blocked transaction. No success notice may imply a blocked preview is deployable. Unspecified target versions require host verification; provide only unspecified/custom controls, not an arbitrary version list.
+
 - Full-width 56px header: application name, EN / JP, theme toggle, GitHub.
 - Main region: max-width 1600px, 28px horizontal inset, 24px top inset.
 - Desktop workspace: two equal columns within one thin boundary. A single vertical separator divides input/output.
