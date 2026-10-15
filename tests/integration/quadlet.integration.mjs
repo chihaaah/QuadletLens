@@ -161,6 +161,7 @@ test("nginx emits web.service and a real network service", () => {
   validate("nginx", convert(fixture("nginx.yaml")), (units) => {
     hasArg(units.get("web.service"), "--publish", "8080:80");
     hasArg(units.get("web.service"), "--network", "systemd-network-default");
+    hasArg(units.get("web.service"), "--network-alias", "web");
     assert.match(
       units.get("web.service"),
       /^Requires=.*network-default-network\.service/m,
@@ -176,6 +177,9 @@ test("stack emits containers, network, volume and dependency/command arguments",
     const app = units.get("app.service");
     hasArg(app, "--publish", "127.0.0.1:8080:80/tcp");
     hasArg(app, "--network", "systemd-network-front");
+    hasArg(app, "--network-alias", "app");
+    hasArg(app, "--workdir", "/data");
+    assert.match(execStart(app), /--entrypoint(?:=|\s+).*\/bin\/sh/);
     assert.match(
       execStart(app),
       /(?:-v|--volume)(?:=|\s+)systemd-volume-data:\/data:ro/,
