@@ -323,6 +323,7 @@ describe("migration analysis and export safety", () => {
         expect(html).toContain(label);
       for (const diagnostic of result.diagnostics)
         expect(html).toContain(diagnostic.path);
+      expect(html.match(/tabindex="0"/g)!.length).toBeGreaterThanOrEqual(3);
       expect(result).toEqual(before);
     },
   );

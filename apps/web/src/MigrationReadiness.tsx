@@ -147,7 +147,7 @@ export function MigrationReadiness({
             })}
           </summary>
           <p>{t("loggingGuidance")}</p>
-          <ul>
+          <ul tabIndex={0} aria-label={t("loggingGroup")}>
             {result.findings
               .filter((f) => f.code === "logging-manual-migration")
               .map((f) => (
@@ -189,7 +189,11 @@ export function MigrationReadiness({
           </label>
         </div>
         <p>{t("findings", { count: filtered.length })}</p>
-        <ul className="finding-list">
+        <ul
+          className="finding-list"
+          tabIndex={filtered.length ? 0 : undefined}
+          aria-label={t("compatibilityDetails")}
+        >
           {filtered.map((f) => (
             <Finding key={f.id} finding={f} language={language} />
           ))}
@@ -203,7 +207,7 @@ export function MigrationReadiness({
               <code>{s.name}</code> ·{" "}
               {t(s.status === "blocked" ? "blockedState" : s.status)}
             </summary>
-            <ul>
+            <ul tabIndex={0} aria-label={`${t("serviceReadiness")} ${s.name}`}>
               {result.findings
                 .filter((f) => s.findingIds.includes(f.id))
                 .map((f) => (
@@ -232,7 +236,7 @@ export function PreviewStatus({
       <strong>{t("previewOnly")}</strong>
       <p>{t("previewBlocked")}</p>
       {file.relatedBlockers.length ? (
-        <ul>
+        <ul tabIndex={0} aria-label={t("sourcePath")}>
           {result.findings
             .filter((f) => file.relatedBlockers.includes(f.id))
             .map((f) => (
