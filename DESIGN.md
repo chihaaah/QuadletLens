@@ -1,10 +1,10 @@
-# Compose2Quadlet design
+# QuadletLens design
 
 This document is the source of truth for future UI changes. Implement tokens in `apps/web/src/style.css`, interface strings in `i18n.ts`, and diagnostic presentation translations in `diagnostics-i18n.ts`.
 
 ## Principles
 
-Compose2Quadlet is a developer tool. Show the conversion workspace immediately, with compact controls, clear headings, subtle separators and little decoration. Use the application name alone as branding. No hero, marketing slogans, gradients, illustrations, remote fonts, decorative cards or shadows.
+QuadletLens is a developer tool. Show the conversion workspace immediately, with compact controls, clear headings, subtle separators and little decoration. Use the application name alone as branding. No hero, marketing slogans, gradients, illustrations, remote fonts, decorative cards or shadows.
 
 The [Stitch documentation reference](https://stitch.withgoogle.com/docs/design-md/overview) informs the restrained typography and separators. Do not copy its branding, navigation, layout or assets.
 
@@ -71,7 +71,7 @@ All components use semantic CSS variables; theme overrides only change token val
 | `--code-section`             | `#3d6850`             | `#acd3b8`             | INI sections               |
 | `--code-key`                 | `#4a5966`             | `#b8c4cf`             | Neutral INI keys           |
 
-Theme defaults to `prefers-color-scheme` and follows changes until the user makes a manual selection. The toggle persists `light`/`dark` in `compose2quadlet.theme`. Resolve theme before first paint. Blocked/unavailable storage must not break the app; preferences still work for the current session. Never store Compose content.
+Theme defaults to `prefers-color-scheme` and follows changes until the user makes a manual selection. The toggle persists `light`/`dark` in `quadletlens.theme`. Resolve theme before first paint. Blocked/unavailable storage must not break the app; preferences still work for the current session. Never store Compose content.
 
 ## Spacing and components
 
@@ -83,7 +83,7 @@ Selected tabs have a background, accent underline and `aria-selected`. Use rovin
 
 ## Language
 
-EN / JP is always visible. Without a saved preference, Japanese browser locales default to `ja`; other locales default to `en`. Store explicit selections in `compose2quadlet.language`; update the document `lang` attribute. Changing language updates interface text, statuses and known diagnostics immediately, without changing source input, filenames or generated contents.
+EN / JP is always visible. Without a saved preference, Japanese browser locales default to `ja`; other locales default to `en`. Store explicit selections in `quadletlens.language`; update the document `lang` attribute. Changing language updates interface text, statuses and known diagnostics immediately, without changing source input, filenames or generated contents.
 
 Use an internal typed dictionary, with no translation service or runtime machine translation. Localize short labels, counts, notices and accessible names. Technical names such as Docker Compose, Podman, Quadlet, `.container`, `.network`, `.volume` and diagnostic paths are not translated. Preserve original YAML parser details and any future unknown diagnostic verbatim rather than dropping information; add dictionary entries when introducing new diagnostics.
 
@@ -96,3 +96,7 @@ At 800px or below, stack input and output; replace the vertical separator with a
 ## Verification
 
 Before UI changes are complete, inspect light/dark and EN/JP on desktop and at a narrow viewport, exercise keyboard/file/export/error flows, verify preference persistence, and run `npm test` plus `npm run build`. Converter behavior and generated files must remain unchanged by display preferences.
+
+## Preference compatibility
+
+Read valid `quadletlens.theme` / `quadletlens.language` values first, then fall back to valid legacy `compose2quadlet.theme` / `compose2quadlet.language` values on the same origin. Future explicit selections write only the new keys. Keep the pre-paint script and React behavior equivalent. Blocked storage falls back to browser defaults. Preferences cannot migrate automatically from `quadlet.chiha.dev` to `quadletlens.chiha.dev`: localStorage is origin-scoped. Do not transfer preferences across origins or persist Compose input or secrets.

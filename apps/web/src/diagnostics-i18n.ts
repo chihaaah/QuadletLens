@@ -1,4 +1,4 @@
-import type { Diagnostic } from "@compose2quadlet/core";
+import type { Diagnostic } from "@quadletlens/core";
 import type { Language } from "./preferences";
 
 // Presentation-only translations. Core diagnostics and generated files stay unchanged.

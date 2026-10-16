@@ -1,14 +1,67 @@
 import { describe, expect, it } from "vitest";
+import { readFileSync } from "node:fs";
+import { runInNewContext } from "node:vm";
 import {
   browserLanguage,
   readPreference,
   savePreference,
+  preferenceKeys,
 } from "../apps/web/src/preferences";
 import { translate } from "../apps/web/src/i18n";
 import { diagnosticMessage } from "../apps/web/src/diagnostics-i18n";
 import { convertCompose } from "../packages/core/src/index";
 
 describe("local UI preferences", () => {
+  const prepaint = readFileSync(
+    new URL("../apps/web/index.html", import.meta.url), "utf8",
+  ).match(/<script>([\s\S]*?)<\/script>/)?.[1];
+
+  it.each([
+    ["legacy only", { "compose2quadlet.theme": "dark", "compose2quadlet.language": "ja" }, "dark", "ja"],
+    ["new overrides legacy", { "quadletlens.theme": "light", "quadletlens.language": "en", "compose2quadlet.theme": "dark", "compose2quadlet.language": "ja" }, "light", "en"],
+    ["invalid new falls back", { "quadletlens.theme": "invalid", "quadletlens.language": "invalid", "compose2quadlet.theme": "dark", "compose2quadlet.language": "ja" }, "dark", "ja"],
+    ["invalid legacy uses defaults", { "compose2quadlet.theme": "invalid", "compose2quadlet.language": "invalid" }, "light", "en"],
+    ["no preferences", {}, "light", "en"],
+  ] as const)("keeps React and pre-paint resolution equivalent: %s", (_name, values, theme, language) => {
+    const local = { getItem: (key: string) => new Map<string, string>(Object.entries(values)).get(key) ?? null };
+    expect(readPreference(local, preferenceKeys.theme, ["light", "dark"]) ?? "light").toBe(theme);
+    expect(readPreference(local, preferenceKeys.language, ["en", "ja"]) ?? "en").toBe(language);
+    const root = { dataset: {}, lang: "" };
+    expect(prepaint).toBeDefined();
+    runInNewContext(prepaint!, {
+      localStorage: local,
+      document: { documentElement: root },
+      matchMedia: () => ({ matches: false }),
+      navigator: { language: "en-US" },
+    });
+    expect(root).toEqual({ dataset: { theme }, lang: language });
+  });
+
+  it("writes only new keys while leaving legacy values intact", () => {
+    const values = new Map([["compose2quadlet.theme", "dark"]]);
+    const local = {
+      getItem: (key: string) => values.get(key) ?? null,
+      setItem: (key: string, value: string) => { values.set(key, value); },
+    };
+    savePreference(local, preferenceKeys.theme, "light");
+    savePreference(local, preferenceKeys.language, "en");
+    expect([...values]).toEqual([
+      ["compose2quadlet.theme", "dark"],
+      ["quadletlens.theme", "light"],
+      ["quadletlens.language", "en"],
+    ]);
+  });
+
+  it("uses browser defaults before paint when storage access throws", () => {
+    const root = { dataset: {}, lang: "" };
+    runInNewContext(prepaint!, {
+      get localStorage() { throw new Error("blocked"); },
+      document: { documentElement: root },
+      matchMedia: () => ({ matches: true }),
+      navigator: { language: "ja-JP" },
+    });
+    expect(root).toEqual({ dataset: { theme: "dark" }, lang: "ja" });
+  });
   it.each([
     ["ja-JP", "ja"],
     ["JA", "ja"],

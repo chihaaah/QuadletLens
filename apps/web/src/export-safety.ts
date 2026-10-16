@@ -1,4 +1,4 @@
-import type { ConversionResult } from "@compose2quadlet/core";
+import type { ConversionResult } from "@quadletlens/core";
 /** Only the public export transaction authorizes copy/download; preview content never does. */
 export function canExport(result: ConversionResult, dirty: boolean): boolean {
   return (

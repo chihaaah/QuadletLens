@@ -4,7 +4,7 @@ import type {
   FindingCategory,
   MigrationFinding,
   PreviewFile,
-} from "@compose2quadlet/core";
+} from "@quadletlens/core";
 import { translate, type MessageKey } from "./i18n";
 import { diagnosticMessage } from "./diagnostics-i18n";
 import type { Language } from "./preferences";

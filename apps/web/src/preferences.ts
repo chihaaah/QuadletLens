@@ -1,5 +1,10 @@
 export type Language = "en" | "ja";
 export type Theme = "light" | "dark";
+const legacyPreferenceKeys: Readonly<Record<string, string>> = {
+  "quadletlens.theme": "compose2quadlet.theme",
+  "quadletlens.language": "compose2quadlet.language",
+};
+
 type StorageReader = Pick<Storage, "getItem">;
 type StorageWriter = Pick<Storage, "setItem">;
 
@@ -10,7 +15,13 @@ export function readPreference<T extends string>(
 ): T | undefined {
   try {
     const value = storage.getItem(key);
-    return allowed.find((item) => item === value);
+    const current = allowed.find((item) => item === value);
+    if (current !== undefined) return current;
+    // Read legacy preferences on this origin only; all writes use new keys.
+    const legacyKey = legacyPreferenceKeys[key];
+    return legacyKey
+      ? allowed.find((item) => item === storage.getItem(legacyKey))
+      : undefined;
   } catch {
     return undefined;
   }
@@ -33,8 +44,8 @@ export function browserLanguage(language: string): Language {
 }
 
 export const preferenceKeys = {
-  language: "compose2quadlet.language",
-  theme: "compose2quadlet.theme",
+  language: "quadletlens.language",
+  theme: "quadletlens.theme",
 } as const;
 
 // Accessing localStorage itself can throw in restricted browser contexts.

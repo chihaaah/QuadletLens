@@ -6,11 +6,19 @@
     <meta name="theme-color" content="#f5f5f2" />
     <script>
       // Resolve preferences before first paint; Compose content is never stored.
-      let theme, language;
-      try {
-        theme = localStorage.getItem("compose2quadlet.theme");
-        language = localStorage.getItem("compose2quadlet.language");
-      } catch {}
+      const readPreference = (key, allowed) => {
+        try {
+          const value = localStorage.getItem(`quadletlens.${key}`);
+          if (allowed.includes(value)) return value;
+          // Legacy keys are read only on this origin; never transfer user data.
+          const legacy = localStorage.getItem(`compose2quadlet.${key}`);
+          return allowed.includes(legacy) ? legacy : undefined;
+        } catch {
+          return undefined;
+        }
+      };
+      const theme = readPreference("theme", ["light", "dark"]);
+      const language = readPreference("language", ["en", "ja"]);
       document.documentElement.dataset.theme =
         theme === "light" || theme === "dark"
           ? theme
@@ -26,9 +34,9 @@
     </script>
     <meta
       name="description"
-      content="Analyze Docker Compose to Podman Quadlet migration locally: compatibility findings, safe previews and explicit export blockers. No uploads."
+      content="A browser-local migration analyzer for Docker Compose to Podman Quadlet."
     />
-    <title>Compose2Quadlet</title>
+    <title>QuadletLens</title>
   </head>
   <body>
     <div id="root"></div>

@@ -47,7 +47,7 @@ jobs:
           node-version: 24
           cache: npm
       - run: npm ci
-      - run: npm run build --workspace @compose2quadlet/core
+      - run: npm run build --workspace @quadletlens/core
       - name: Install Fedora RPM userspace and run the real generator
         env:
           FEDORA_RELEASE: ${{ matrix.fedora }}

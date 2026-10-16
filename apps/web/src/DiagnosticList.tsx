@@ -1,4 +1,4 @@
-import type { Diagnostic } from "@compose2quadlet/core";
+import type { Diagnostic } from "@quadletlens/core";
 import type { Language } from "./preferences";
 import { Icon } from "./Icon";
 import { translate } from "./i18n";

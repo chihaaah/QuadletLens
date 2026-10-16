@@ -98,7 +98,7 @@ const fixture = (path) =>
   readFileSync(new URL(`../fixtures/${path}`, import.meta.url), "utf8");
 
 function validate(name, files, inspect) {
-  const directory = mkdtempSync(join(tmpdir(), "compose2quadlet-"));
+  const directory = mkdtempSync(join(tmpdir(), "quadletlens-"));
   const source = join(directory, "source"),
     output = join(directory, "generated");
   mkdirSync(source);
