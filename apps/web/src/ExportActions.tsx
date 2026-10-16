@@ -1,4 +1,4 @@
-import type { ConversionResult } from "@compose2quadlet/core";
+import type { ConversionResult } from "@quadletlens/core";
 import { canExport } from "./export-safety";
 import { translate } from "./i18n";
 import type { Language } from "./preferences";

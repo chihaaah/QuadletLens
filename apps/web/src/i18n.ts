@@ -48,7 +48,7 @@ const en = {
   serviceReadiness: "Service readiness",
   noPreview: "No safe preview available. Resolve the blocking findings.",
   previewGenerated: "Preview generated; migration remains blocked.",
-  home: "Compose2Quadlet home",
+  home: "QuadletLens home",
   language: "Language",
   light: "Light",
   dark: "Dark",
@@ -146,7 +146,7 @@ const ja: Messages = {
   noPreview:
     "安全なプレビューを生成できません。阻害 finding を解決してください。",
   previewGenerated: "プレビューを生成しました。移行課題の解決が必要です。",
-  home: "Compose2Quadlet ホーム",
+  home: "QuadletLens ホーム",
   language: "言語",
   light: "ライト",
   dark: "ダーク",

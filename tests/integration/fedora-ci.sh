@@ -2,8 +2,8 @@
 set -euo pipefail
 # Fedora userspace from signed RPM packages; no OCI image or systemd boot.
 node tests/integration/compatibility.mjs --check-release "${FEDORA_RELEASE:-}"
-root="${RUNNER_TEMP:?}/compose2quadlet-fedora-${FEDORA_RELEASE}"
-repos="${RUNNER_TEMP}/compose2quadlet-fedora-${FEDORA_RELEASE}-repos"
+root="${RUNNER_TEMP:?}/quadletlens-fedora-${FEDORA_RELEASE}"
+repos="${RUNNER_TEMP}/quadletlens-fedora-${FEDORA_RELEASE}-repos"
 release_url="https://dl.fedoraproject.org/pub/fedora/linux/releases/${FEDORA_RELEASE}/Everything/x86_64/os/"
 updates_url="https://dl.fedoraproject.org/pub/fedora/linux/updates/${FEDORA_RELEASE}/Everything/x86_64/"
 # Fail before package installation when a target is unavailable/EOL or the mirror is unreachable.

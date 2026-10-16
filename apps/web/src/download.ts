@@ -1,5 +1,5 @@
 import { strToU8, zipSync } from "fflate";
-import type { GeneratedFile } from "@compose2quadlet/core";
+import type { GeneratedFile } from "@quadletlens/core";
 
 export function makeArchive(files: GeneratedFile[]): Uint8Array {
   return zipSync(

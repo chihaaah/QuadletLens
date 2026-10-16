@@ -1,4 +1,4 @@
-import type { Diagnostic } from "@compose2quadlet/core";
+import type { Diagnostic } from "@quadletlens/core";
 
 export interface DiagnosticGroup {
   kind: "logging" | "single";

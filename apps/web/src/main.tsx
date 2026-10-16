@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
-import { convertCompose, type ConversionResult } from "@compose2quadlet/core";
+import { convertCompose, type ConversionResult } from "@quadletlens/core";
 import { download, makeArchive } from "./download";
 import { translate, type MessageKey, type Notice } from "./i18n";
 import { MigrationReadiness, PreviewStatus } from "./MigrationReadiness";
@@ -161,7 +161,7 @@ function App() {
     if (!exportEnabled) return;
     try {
       download(
-        "compose2quadlet.zip",
+        "quadletlens.zip",
         new Uint8Array(makeArchive(result.files)).buffer,
         "application/zip",
       );
@@ -199,7 +199,7 @@ function App() {
       <header className="app-header">
         <h1>
           <a href="./" aria-label={t("home")}>
-            Compose2Quadlet
+            QuadletLens
           </a>
         </h1>
         <div className="header-controls">
@@ -235,7 +235,7 @@ function App() {
           </button>
           <a
             className="github-link"
-            href="https://github.com/chihaaah/compose2quadlet"
+            href="https://github.com/chihaaah/QuadletLens"
             target="_blank"
             rel="noreferrer"
           >

@@ -9,3 +9,5 @@
 - Use [DESIGN.md](DESIGN.md) as the source of truth for UI changes. Keep interface translations in the web app; core diagnostics and generated identifiers stay UI-independent.
 - Keep output deterministic and document semantic differences from Compose.
 - Work on feature branches; never push directly to main.
+
+- Use QuadletLens as the public product name, `https://quadletlens.chiha.dev/` as the production URL, and `https://github.com/chihaaah/QuadletLens` for repository links. Preserve same-origin legacy preference reads; never store Compose input or secrets.
